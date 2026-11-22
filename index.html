@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>에테르 공방 &amp; 차원 원정대 — Aether Forge &amp; Rift</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-wrap">
+    <!-- Top Resource Bar -->
+    <header class="px-box top-bar">
+      <div class="top-row">
+        <div class="brand-title">
+          <img id="brand-emblem-img" alt="에테르 정령" style="width:30px;height:30px;border:2px solid var(--cyan);object-fit:cover;image-rendering:pixelated;" />
+          <span>에테르 공방 &amp; 차원 원정대</span>
+        </div>
+        <div class="res-strip">
+          <div class="res-pill">
+            <span class="dot" style="background:var(--cyan)"></span>
+            <div>
+              <span class="lbl">에테르 (<span id="res-aether-ps" class="num">0</span>/s)</span>
+              <span id="res-aether" class="val num" style="color:var(--cyan)">0</span>
+            </div>
+          </div>
+          <div class="res-pill">
+            <span class="dot" style="background:var(--gold)"></span>
+            <div>
+              <span class="lbl">결정 파편</span>
+              <span id="res-crystal" class="val num" style="color:var(--gold)">0</span>
+            </div>
+          </div>
+          <div class="res-pill">
+            <span class="dot" style="background:var(--purple)"></span>
+            <div>
+              <span class="lbl">차원 조각</span>
+              <span id="res-shards" class="val num" style="color:var(--purple)">0</span>
+            </div>
+          </div>
+        </div>
+        <div class="top-actions">
+          <button id="btn-sound" class="px-btn sm">SFX: ON</button>
+          <button id="btn-notation" class="px-btn sm">표기: K/M</button>
+          <button id="btn-rsi" class="px-btn sm purple">RSI 진단</button>
+          <button id="btn-save-modal" class="px-btn sm">저장</button>
+        </div>
+      </div>
+      <div class="unlock-bar-wrap">
+        <span id="next-unlock-label" style="white-space:nowrap;">다음 해금: 차원 원정대</span>
+        <div class="px-progress">
+          <div id="next-unlock-fill" class="px-progress-fill"></div>
+          <div id="next-unlock-text" class="px-progress-text num">0%</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs (7 Long-Term Progression Systems) -->
+    <nav class="nav-tabs" id="nav-tabs">
+      <button class="px-btn tab-btn active" data-tab="forge">[1] 에테르 공방 <span class="badge-dot" id="badge-forge"></span></button>
+      <button class="px-btn tab-btn locked" data-tab="expedition" id="tab-btn-expedition">[2] 차원 원정대 <span class="badge-dot" id="badge-expedition"></span></button>
+      <button class="px-btn tab-btn locked" data-tab="spirits" id="tab-btn-spirits">[3] 정령 성소 <span class="badge-dot" id="badge-spirits"></span></button>
+      <button class="px-btn tab-btn locked" data-tab="market" id="tab-btn-market">[4] 차원 교역소 <span class="badge-dot" id="badge-market"></span></button>
+      <button class="px-btn tab-btn locked" data-tab="prestige" id="tab-btn-prestige">[5] 차원 붕괴 <span class="badge-dot" id="badge-prestige"></span></button>
+      <button class="px-btn tab-btn locked" data-tab="challenges" id="tab-btn-challenges">[6] 초월 시련 <span class="badge-dot" id="badge-challenges"></span></button>
+      <button class="px-btn tab-btn locked" data-tab="gambit" id="tab-btn-gambit">[7] 갬빗 제어실 <span class="badge-dot" id="badge-gambit"></span></button>
+    </nav>
+
+    <div class="main-grid">
+      <!-- Left Main Column -->
+      <div>
+        <!-- TAB 1: FORGE -->
+        <section class="px-box tab-pane active" id="pane-forge">
+          <div class="scene-box">
+            <img id="scene-forge-img" alt="에테르 연성 공방" class="scene-bg" />
+            <canvas id="forge-canvas" class="scene-canvas"></canvas>
+            <div class="scene-overlay-bar">
+              <div class="scene-tag">
+                <span>회차 #<span id="run-count" class="num">1</span></span> |
+                <span>배수 <span id="global-mult" class="num" style="color:var(--cyan)">x1.00</span></span>
+                <span id="active-chal-banner" class="tag-chip danger" style="display:none;margin-left:6px;"></span>
+              </div>
+              <button id="btn-manual-extract" class="px-btn cyan">⚡ 에테르 추출 (+<span id="click-val" class="num">1</span>)</button>
+            </div>
+          </div>
+          <div class="panel-head">
+            <div class="panel-title">다층 연성 생산기 (6티어 도함수 구조)</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;" id="buy-mode-group">
+              <button class="px-btn sm active" data-buy="1">x1</button>
+              <button class="px-btn sm" data-buy="10">x10</button>
+              <button class="px-btn sm" data-buy="ms">마일스톤</button>
+              <button class="px-btn sm" data-buy="max">MAX (M)</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="tier-list" id="tier-list"></div>
+          </div>
+        </section>
+
+        <!-- TAB 2: EXPEDITION -->
+        <section class="px-box tab-pane" id="pane-expedition">
+          <div class="scene-box">
+            <img id="scene-battle-img" alt="차원 균열 전장" class="scene-bg" />
+            <canvas id="battle-canvas" class="scene-canvas"></canvas>
+            <div class="scene-overlay-bar">
+              <div class="scene-tag">
+                <span id="battle-stage-name">균열 1-1</span> |
+                예상 승률 <span id="battle-winrate" class="num" style="color:var(--emerald)">100%</span>
+              </div>
+              <div class="scene-tag">처치 속도 <span id="battle-kps" class="num" style="color:var(--gold)">0.0</span>/s</div>
+            </div>
+          </div>
+          <div class="panel-head">
+            <div class="panel-title">차원 균열 자동 원정 (4개 고유 전장)</div>
+            <button id="btn-auto-advance" class="px-btn sm emerald">자동 돌파: ON</button>
+          </div>
+          <div class="panel-body">
+            <div class="region-tabs" id="region-tabs"></div>
+            <div class="exp-stats-grid">
+              <div class="stat-mini">
+                <div class="muted">원정대 전투력 (ATK / HP)</div>
+                <div class="num" style="font-size:15px;color:var(--emerald);margin:4px 0;"><span id="exp-atk">12</span> / <span id="exp-hp">100</span></div>
+                <button id="btn-upg-gear" class="px-btn sm emerald" style="width:100%;">장비 강화 (<span id="cost-upg-gear" class="num">220</span> 에테르)</button>
+              </div>
+              <div class="stat-mini">
+                <div class="muted">포획 공명도 (기본 포획률 보너스)</div>
+                <div class="num" style="font-size:15px;color:var(--purple);margin:4px 0;">+<span id="exp-capture">0</span>% (천장 +5%/실패)</div>
+                <button id="btn-upg-resonator" class="px-btn sm purple" style="width:100%;">공명기 강화 (<span id="cost-upg-resonator" class="num">350</span> 에테르)</button>
+              </div>
+            </div>
+            <div class="px-card" style="padding:10px;">
+              <div class="row-between">
+                <div><strong id="enemy-name">잿빛 균열 개체 #1</strong> <span id="enemy-boss-tag" class="tag-chip gold" style="display:none;">BOSS</span></div>
+                <span class="muted">보상: 결정 파편 +<span id="enemy-reward" class="num" style="color:var(--gold)">2</span></span>
+              </div>
+              <div class="px-progress mt-8">
+                <div id="enemy-hp-fill" class="px-progress-fill danger"></div>
+                <div id="enemy-hp-text" class="px-progress-text num">60 / 60</div>
+              </div>
+              <div class="row-between mt-8 muted">
+                <span>원정대 체력: <span id="party-hp-text" class="num" style="color:var(--emerald)">100/100</span></span>
+                <span>스테이지 처치: <span id="stage-kills" class="num">0/5</span></span>
+              </div>
+            </div>
+            <div id="region-spirits-preview" class="mt-10 muted"></div>
+          </div>
+        </section>
+
+        <!-- TAB 3: SPIRITS -->
+        <section class="px-box tab-pane" id="pane-spirits">
+          <div class="scene-box">
+            <img id="scene-spirits-img" alt="정령 성소" class="scene-bg" />
+            <div class="scene-overlay-bar">
+              <div class="scene-tag">정령 성소 · 장기 숙련도 Lv.1~99 (5/15/35/65/99 영구 패시브)</div>
+            </div>
+          </div>
+          <div class="panel-head">
+            <div class="panel-title">정령 도감 &amp; 규칙 변조 배치 (<span id="codex-count" class="num">0</span>/12)</div>
+            <span class="muted">장착 슬롯: <span id="max-spirit-slots" class="num">3</span>개</span>
+          </div>
+          <div class="panel-body">
+            <div class="spirit-grid" id="spirit-codex-grid"></div>
+          </div>
+        </section>
+
+        <!-- TAB 4: MARKET -->
+        <section class="px-box tab-pane" id="pane-market">
+          <div class="scene-box">
+            <img id="scene-market-img" alt="차원 교역소" class="scene-bg" />
+            <div class="scene-overlay-bar">
+              <div class="scene-tag">차원 교역소 · 결정 파편 매도 전용 (공급 압력 적용)</div>
+            </div>
+          </div>
+          <div class="panel-head">
+            <div class="panel-title">동적 시세 거래판</div>
+            <span class="tag-chip gold">무한 복사 차단</span>
+          </div>
+          <div class="panel-body">
+            <div class="row-between">
+              <div>
+                <div class="muted">현재 결정 파편 1개당 시세</div>
+                <div style="font-size:20px;color:var(--gold);" class="num">
+                  <span id="market-price">0</span> 에테르 <span id="market-mult-badge" class="tag-chip gold">1.00x</span>
+                </div>
+              </div>
+              <div style="text-align:right;"><div class="muted">다음 시세 갱신</div><div class="num" id="market-timer">45s</div></div>
+            </div>
+            <div class="market-chart-box"><svg id="market-svg" class="market-svg" viewBox="0 0 360 80" preserveAspectRatio="none"></svg></div>
+            <div class="row-between" style="gap:6px;">
+              <button class="px-btn gold" id="btn-sell-25">25% 매도</button>
+              <button class="px-btn gold" id="btn-sell-50">50% 매도</button>
+              <button class="px-btn gold" id="btn-sell-100">전량 매도</button>
+              <button class="px-btn sm" id="btn-auto-sell" disabled>자동 매도(≥1.8x): 잠김</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 5: PRESTIGE -->
+        <section class="px-box tab-pane" id="pane-prestige">
+          <div class="scene-box">
+            <img id="scene-prestige-img" alt="차원 붕괴 포털" class="scene-bg" />
+            <div class="scene-overlay-bar">
+              <div class="scene-tag">
+                보유 조각: <span id="prestige-owned" class="num" style="color:var(--purple)">0</span> |
+                누적 조각 보너스: <span id="prestige-bonus" class="num" style="color:var(--cyan)">+0%</span>
+              </div>
+              <button id="btn-do-prestige" class="px-btn purple" disabled>차원 붕괴 실행 (+<span id="prestige-gain" class="num">0</span> 조각)</button>
+            </div>
+          </div>
+          <div class="panel-head">
+            <div class="panel-title">차원 붕괴 업그레이드 (Layer 1 영구 유지)</div>
+            <span class="muted">누적 조각 10개 달성 시 초월 시련·갬빗 제어실 개방</span>
+          </div>
+          <div class="panel-body">
+            <div class="upg-grid" id="prestige-upg-grid"></div>
+          </div>
+        </section>
+
+        <!-- TAB 6: CHALLENGES (1-Year Mid/Late Meta Layer) -->
+        <section class="px-box tab-pane" id="pane-challenges">
+          <div class="scene-box">
+            <img id="scene-challenges-img" alt="초월 시련 제단" class="scene-bg" />
+            <div class="scene-overlay-bar">
+              <div class="scene-tag">초월 시련 · 규칙 제약 하에서 목표 에테르 달성 시 영구 특전 해금</div>
+              <button id="btn-exit-challenge" class="px-btn sm danger" style="display:none;">시련 중단</button>
+            </div>
+          </div>
+          <div class="panel-head">
+            <div class="panel-title">초월 시련 목록 (<span id="chal-done-count" class="num">0</span>/4 완료)</div>
+            <span class="muted">시련 진입 시 현재 회차 에테르·생산기가 초기화됩니다</span>
+          </div>
+          <div class="panel-body">
+            <div class="upg-grid" id="challenge-grid"></div>
+          </div>
+        </section>
+
+        <!-- TAB 7: GAMBIT AUTOMATION & ETERNITY HORIZON -->
+        <section class="px-box tab-pane" id="pane-gambit">
+          <div class="scene-box">
+            <img id="scene-gambit-img" alt="갬빗 자동화 제어실" class="scene-bg" />
+            <div class="scene-overlay-bar">
+              <div class="scene-tag">갬빗 제어실 · 조건부 자동화 규칙(IF-THEN)으로 장기 방치 파이프라인 설계</div>
+              <button id="btn-gambit-master" class="px-btn sm cyan">갬빗 엔진: ON</button>
+            </div>
+          </div>
+          <div class="panel-head">
+            <div class="panel-title">조건부 자동화 슬롯 (4개)</div>
+            <span class="muted">1초마다 위에서 아래 순서로 조건을 평가해 실행합니다</span>
+          </div>
+          <div class="panel-body">
+            <div id="gambit-list"></div>
+            <div class="px-card mt-10" style="padding:10px;border-color:var(--purple);">
+              <div class="row-between">
+                <strong style="color:var(--purple);">🌌 Layer 2 예고: 영겁(Eternity) 특이점</strong>
+                <span class="tag-chip purple">장기 1년 확장 레이어</span>
+              </div>
+              <p class="muted mt-8">
+                초월 시련 4종을 모두 완료하고 누적 차원 조각 1,000개에 도달하면 영겁 레이어(시간 증폭기·별자리 연구 트리)가 개방됩니다. 현재 진행률:
+                <strong id="eternity-progress" class="num" style="color:var(--purple)">0 / 1,000 조각</strong>
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right Sidebar -->
+      <aside style="display:flex;flex-direction:column;gap:12px;">
+        <div class="px-box">
+          <div class="panel-head">
+            <div class="panel-title" style="color:var(--orange);">🔥 과부하 &amp; 열기 제어</div>
+            <span id="overclock-status" class="tag-chip">대기</span>
+          </div>
+          <div class="overclock-box">
+            <div class="muted">과부하 ON 시 생산 ×2.5 · 열기 75~95% 골든 존 방출로 결정 파편과 ×1.5 버프 획득</div>
+            <div class="heat-track">
+              <div class="golden-zone" title="골든 존 (75% ~ 95%)"></div>
+              <div id="heat-fill" class="heat-fill"></div>
+              <div id="heat-label" class="heat-label num">열기 0%</div>
+            </div>
+            <div class="row-between">
+              <button id="btn-overclock" class="px-btn orange" style="flex:1;">과부하 ON (O)</button>
+              <button id="btn-vent" class="px-btn gold" style="flex:1;" disabled>열기 방출 (R)</button>
+            </div>
+            <div id="vent-buff-line" class="muted" style="min-height:18px;"></div>
+          </div>
+        </div>
+
+        <div class="px-box">
+          <div class="panel-head">
+            <div class="panel-title" style="color:var(--purple);">✨ 배치된 정령 슬롯</div>
+            <span class="muted">클릭하여 해제</span>
+          </div>
+          <div class="panel-body">
+            <div class="spirit-slots-grid" id="spirit-slots-grid"></div>
+          </div>
+        </div>
+
+        <div class="px-box">
+          <div class="panel-head">
+            <div class="panel-title">📊 공방 텔레메트리</div>
+            <button id="btn-warp-5m" class="px-btn sm">+5분 테스트</button>
+          </div>
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+            <div class="row-between"><span class="muted">이번 회차 누적 에테르</span><span id="stat-run-aether" class="num">0</span></div>
+            <div class="row-between"><span class="muted">이번 회차 경과 시간</span><span id="stat-run-time" class="num">00:00</span></div>
+            <div class="row-between"><span class="muted">하위 티어 시너지</span><span id="stat-synergy" class="num" style="color:var(--cyan)">+0%</span></div>
+            <div class="row-between"><span class="muted">영구 숙련도 패시브</span><span id="stat-mastery-bonus" class="num" style="color:var(--emerald)">+0%</span></div>
+            <div class="row-between"><span class="muted">교역소 수익 비중</span><span id="stat-market-ratio" class="num" style="color:var(--gold)">0%</span></div>
+            <div class="muted mt-8" style="border-top:1px solid var(--border-mid);padding-top:6px;">
+              단축키: <span class="num">1~7</span> 탭 · <span class="num">M</span> 최대구매 · <span class="num">O</span> 과부하 · <span class="num">R</span> 방출
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toast-stack"></div>
+
+  <!-- Modals -->
+  <div class="modal-backdrop" id="modal-save">
+    <div class="px-box modal-box">
+      <div class="row-between" style="margin-bottom:10px;">
+        <strong>세이브 관리 (saveVersion 2)</strong>
+        <button class="px-btn sm" data-close-modal="modal-save">닫기</button>
+      </div>
+      <p class="muted">10초마다 자동 저장됩니다. 아래 Base64 코드를 복사해 백업하거나 붙여넣어 복원하세요.</p>
+      <textarea id="save-code-area" rows="4" class="mt-8"></textarea>
+      <div class="row-between mt-8">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button id="btn-export-save" class="px-btn sm cyan">코드 추출/복사</button>
+          <button id="btn-import-save" class="px-btn sm emerald">코드 불러오기</button>
+        </div>
+        <button id="btn-hard-reset" class="px-btn sm danger">완전 초기화</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal-reset">
+    <div class="px-box modal-box">
+      <strong style="color:var(--danger);">정말 모든 진행도를 초기화할까요?</strong>
+      <p class="muted mt-8">차원 조각, 시련, 정령 도감과 숙련도가 모두 삭제됩니다.</p>
+      <div class="row-between mt-10">
+        <button class="px-btn sm" data-close-modal="modal-reset">취소</button>
+        <button id="btn-confirm-hard-reset" class="px-btn sm danger">예, 초기화합니다</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal-prestige">
+    <div class="px-box modal-box">
+      <strong style="color:var(--purple);">차원 붕괴를 실행할까요?</strong>
+      <p class="muted mt-8">
+        획득 예정 차원 조각: <span id="modal-prestige-gain" class="num" style="color:var(--purple)">0</span>개<br />
+        에테르와 생산기는 초기화되며, 누적 조각 보너스, 환생 업그레이드, 시련 보상, 정령 도감과 숙련도는 모두 유지됩니다.
+      </p>
+      <div class="row-between mt-10">
+        <button class="px-btn sm" data-close-modal="modal-prestige">취소</button>
+        <button id="btn-confirm-prestige" class="px-btn sm purple">차원 붕괴 실행</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal-offline">
+    <div class="px-box modal-box">
+      <div class="row-between">
+        <strong style="color:var(--cyan);">오프라인 정산 리포트</strong>
+        <button class="px-btn sm" data-close-modal="modal-offline">확인</button>
+      </div>
+      <div id="offline-summary-body" class="mt-10" style="font-size:13px;"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal-rsi">
+    <div class="px-box modal-box">
+      <div class="row-between" style="margin-bottom:8px;">
+        <strong style="color:var(--purple);">RSI 헤드리스 밸런스 채점기 (evaluatePacing)</strong>
+        <button class="px-btn sm" data-close-modal="modal-rsi">닫기</button>
+      </div>
+      <p class="muted">합리적 봇이 1시간을 가상 플레이해 5대 밸런스 통과 기준을 자동 검증합니다.</p>
+      <div class="mt-8" style="display:flex;gap:6px;">
+        <button id="btn-run-sim" class="px-btn sm purple">1시간 시뮬레이션 실행</button>
+        <button id="btn-copy-sim" class="px-btn sm cyan">JSON 복사</button>
+      </div>
+      <div id="rsi-kpi-wrap" class="mt-8"></div>
+      <pre id="rsi-json-out" style="max-height:180px;overflow:auto;">버튼을 눌러 시뮬레이션을 실행하세요.</pre>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/hooks.js"></script>
+  <script src="js/math.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/simulator.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>
